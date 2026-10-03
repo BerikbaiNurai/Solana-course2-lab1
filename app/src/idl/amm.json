@@ -1,0 +1,185 @@
+{
+  "address": "3mmojyB5aYhqo1VXBYmE3tfUQfTuFkwfnHK4KZ1v66PK",
+  "metadata": {
+    "name": "amm",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Constant-product AMM DeFi MVP"
+  },
+  "instructions": [
+    {
+      "name": "initialize",
+      "discriminator": [175, 175, 109, 31, 13, 152, 155, 237],
+      "accounts": [
+        { "name": "payer", "writable": true, "signer": true },
+        { "name": "token_a_mint" },
+        { "name": "token_b_mint" },
+        { "name": "pool", "writable": true, "pda": { "seeds": [{ "kind": "const", "value": [112, 111, 111, 108] }, { "kind": "account", "path": "token_a_mint" }, { "kind": "account", "path": "token_b_mint" }] } },
+        { "name": "lp_mint", "writable": true },
+        { "name": "vault_a", "writable": true },
+        { "name": "vault_b", "writable": true },
+        { "name": "lp_lock", "writable": true },
+        { "name": "token_program", "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" },
+        { "name": "associated_token_program", "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL" },
+        { "name": "system_program", "address": "11111111111111111111111111111111" },
+        { "name": "rent", "address": "SysvarRent111111111111111111111111111111111" }
+      ],
+      "args": [{ "name": "fee_bps", "type": "u16" }]
+    },
+    {
+      "name": "add_liquidity",
+      "discriminator": [181, 157, 89, 67, 143, 182, 52, 72],
+      "accounts": [
+        { "name": "user", "writable": true, "signer": true },
+        { "name": "pool", "writable": true },
+        { "name": "vault_a", "writable": true },
+        { "name": "vault_b", "writable": true },
+        { "name": "lp_mint", "writable": true },
+        { "name": "user_token_a", "writable": true },
+        { "name": "user_token_b", "writable": true },
+        { "name": "user_lp", "writable": true },
+        { "name": "lp_lock", "writable": true },
+        { "name": "token_program", "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" }
+      ],
+      "args": [
+        { "name": "amount_a", "type": "u64" },
+        { "name": "amount_b", "type": "u64" },
+        { "name": "min_lp", "type": "u64" }
+      ]
+    },
+    {
+      "name": "remove_liquidity",
+      "discriminator": [80, 85, 209, 72, 24, 206, 177, 108],
+      "accounts": [
+        { "name": "user", "writable": true, "signer": true },
+        { "name": "pool", "writable": true },
+        { "name": "vault_a", "writable": true },
+        { "name": "vault_b", "writable": true },
+        { "name": "lp_mint", "writable": true },
+        { "name": "user_token_a", "writable": true },
+        { "name": "user_token_b", "writable": true },
+        { "name": "user_lp", "writable": true },
+        { "name": "token_program", "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" }
+      ],
+      "args": [
+        { "name": "lp_amount", "type": "u64" },
+        { "name": "min_a", "type": "u64" },
+        { "name": "min_b", "type": "u64" }
+      ]
+    },
+    {
+      "name": "swap",
+      "discriminator": [248, 198, 158, 145, 225, 117, 135, 200],
+      "accounts": [
+        { "name": "user", "signer": true },
+        { "name": "pool" },
+        { "name": "vault_a", "writable": true },
+        { "name": "vault_b", "writable": true },
+        { "name": "user_token_a", "writable": true },
+        { "name": "user_token_b", "writable": true },
+        { "name": "token_program", "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" }
+      ],
+      "args": [
+        { "name": "amount_in", "type": "u64" },
+        { "name": "min_out", "type": "u64" },
+        { "name": "a_to_b", "type": "bool" }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Pool",
+      "discriminator": [241, 154, 109, 4, 17, 177, 109, 188]
+    }
+  ],
+  "events": [
+    { "name": "PoolInitialized", "discriminator": [1, 2, 3, 4, 5, 6, 7, 8] },
+    { "name": "LiquidityAdded", "discriminator": [9, 10, 11, 12, 13, 14, 15, 16] },
+    { "name": "LiquidityRemoved", "discriminator": [17, 18, 19, 20, 21, 22, 23, 24] },
+    { "name": "Swapped", "discriminator": [25, 26, 27, 28, 29, 30, 31, 32] }
+  ],
+  "errors": [
+    { "code": 6000, "name": "ZeroAmount", "msg": "Amount must be greater than zero" },
+    { "code": 6001, "name": "MathOverflow", "msg": "Math overflow" },
+    { "code": 6002, "name": "DivisionByZero", "msg": "Division by zero" },
+    { "code": 6003, "name": "SlippageExceeded", "msg": "Slippage tolerance exceeded" },
+    { "code": 6004, "name": "InsufficientLiquidity", "msg": "Insufficient liquidity" },
+    { "code": 6005, "name": "InsufficientLp", "msg": "Insufficient LP tokens" },
+    { "code": 6006, "name": "EmptyPool", "msg": "Pool is empty" },
+    { "code": 6007, "name": "InvalidMint", "msg": "Invalid mint" },
+    { "code": 6008, "name": "InvalidVaultOwner", "msg": "Invalid vault owner" },
+    { "code": 6009, "name": "InvalidTokenOwner", "msg": "Invalid token account owner" },
+    { "code": 6010, "name": "FeeTooHigh", "msg": "Fee exceeds maximum allowed" },
+    { "code": 6011, "name": "IdenticalMints", "msg": "Token mints must be different" }
+  ],
+  "types": [
+    {
+      "name": "Pool",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "authority", "type": "pubkey" },
+          { "name": "token_a_mint", "type": "pubkey" },
+          { "name": "token_b_mint", "type": "pubkey" },
+          { "name": "lp_mint", "type": "pubkey" },
+          { "name": "vault_a", "type": "pubkey" },
+          { "name": "vault_b", "type": "pubkey" },
+          { "name": "fee_bps", "type": "u16" },
+          { "name": "bump", "type": "u8" },
+          { "name": "locked_liquidity", "type": "bool" }
+        ]
+      }
+    },
+    {
+      "name": "PoolInitialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "pool", "type": "pubkey" },
+          { "name": "token_a_mint", "type": "pubkey" },
+          { "name": "token_b_mint", "type": "pubkey" },
+          { "name": "fee_bps", "type": "u16" }
+        ]
+      }
+    },
+    {
+      "name": "LiquidityAdded",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "pool", "type": "pubkey" },
+          { "name": "user", "type": "pubkey" },
+          { "name": "amount_a", "type": "u64" },
+          { "name": "amount_b", "type": "u64" },
+          { "name": "lp_minted", "type": "u64" }
+        ]
+      }
+    },
+    {
+      "name": "LiquidityRemoved",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "pool", "type": "pubkey" },
+          { "name": "user", "type": "pubkey" },
+          { "name": "amount_a", "type": "u64" },
+          { "name": "amount_b", "type": "u64" },
+          { "name": "lp_burned", "type": "u64" }
+        ]
+      }
+    },
+    {
+      "name": "Swapped",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "pool", "type": "pubkey" },
+          { "name": "user", "type": "pubkey" },
+          { "name": "amount_in", "type": "u64" },
+          { "name": "amount_out", "type": "u64" },
+          { "name": "a_to_b", "type": "bool" }
+        ]
+      }
+    }
+  ]
+}

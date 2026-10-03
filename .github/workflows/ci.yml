@@ -1,0 +1,79 @@
+name: build-and-test
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  anchor:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo / solana
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cache/solana
+            ~/.local/share/solana
+          key: ${{ runner.os }}-solana-2.1.21-anchor-0.30.1-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install Solana CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.21/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Install Anchor CLI (prebuilt)
+        run: |
+          curl -sL https://github.com/coral-xyz/anchor/releases/download/v0.30.1/anchor-0.30.1-x86_64-unknown-linux-gnu.tar.gz \
+            | tar -xz -C /tmp || true
+          if [ -f /tmp/anchor ]; then
+            sudo mv /tmp/anchor /usr/local/bin/anchor
+          else
+            # fallback: cargo install
+            cargo install --git https://github.com/coral-xyz/anchor --tag v0.30.1 anchor-cli --locked --force
+          fi
+          anchor --version
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install JS deps
+        run: npm install
+
+      - name: Unit tests (host)
+        run: cargo test --manifest-path programs/amm/Cargo.toml
+
+      - name: Ensure program keypair matches declare_id
+        run: |
+          mkdir -p target/deploy
+          if [ ! -f target/deploy/amm-keypair.json ]; then
+            # Ephemeral CI keypair — rewrite declare_id for this run only
+            solana-keygen new --no-bip39-passphrase -o target/deploy/amm-keypair.json --force
+            PUBKEY=$(solana-keygen pubkey target/deploy/amm-keypair.json)
+            sed -i "s/declare_id!(\"[^\"]*\")/declare_id!(\"$PUBKEY\")/" programs/amm/src/lib.rs
+            sed -i "s/amm = \"[^\"]*\"/amm = \"$PUBKEY\"/g" Anchor.toml
+            echo "CI program id: $PUBKEY"
+          fi
+
+      - name: Anchor build
+        run: anchor build
+
+      - name: Anchor test
+        run: anchor test
+
+      - name: Upload .so artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: amm-so
+          path: target/deploy/amm.so

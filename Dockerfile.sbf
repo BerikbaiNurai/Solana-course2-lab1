@@ -1,0 +1,14 @@
+# Faster builder: Solana CLI only (no Anchor compile)
+FROM rust:1.79-bookworm
+
+RUN apt-get update && apt-get install -y curl pkg-config libssl-dev libudev-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.21/install)"
+ENV PATH="/root/.local/share/solana/install/active_release/bin:${PATH}"
+
+# Warm platform-tools download
+RUN cargo-build-sbf --version
+
+WORKDIR /work
+CMD ["bash", "-lc", "cargo-build-sbf --manifest-path programs/amm/Cargo.toml"]

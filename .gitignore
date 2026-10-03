@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+app/node_modules/
+.yarn/
+dist/
+app/dist/
+
+# Build
+target/
+.anchor/
+test-ledger/
+.DS_Store
+
+# Secrets — NEVER commit
+.env
+.env.*
+*.pem
+id.json
+**/id.json
+.secrets/
+deploy-wallet.json
+
+# Keep deploy keypair OUT of git (generate locally)
+# target/deploy/*-keypair.json is under target/ which is ignored
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Logs
+*.log
+npm-debug.log*
+
+deploy-wallet.json
+desktop.ini
+target/
+
